@@ -1,0 +1,4 @@
+name: 'debug'
+runs:
+  using: 'node12'
+  main: 'test.js'
