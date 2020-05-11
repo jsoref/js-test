@@ -34,7 +34,7 @@ comment() {
       method="-X $method"
     fi
   fi
-  curl -L -s -S \
+  curl -vvv -L -s -S \
     $method \
     -H "Authorization: token $GITHUB_TOKEN" \
     --header "Content-Type: application/json" \
