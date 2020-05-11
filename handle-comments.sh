@@ -7,6 +7,11 @@ export spellchecker=${spellchecker:-/app}
 echo debug:
 cat "$GITHUB_EVENT_PATH"
 
+action=$(jq -r .action < "$GITHUB_EVENT_PATH")
+if [ "$action" != "created" ]; then
+  exit 0
+fi
+
 issue=$(mktemp)
 jq -r .issue < "$GITHUB_EVENT_PATH" > $issue
 number=$(jq -r .number < $issue)
