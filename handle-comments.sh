@@ -25,16 +25,19 @@ body_to_payload() {
 comment() {
   comments_url="$1"
   payload="$2"
-  method="$3"
-  if [ -n "$method" ]; then
-    method="-X $method"
+  if [ -n "$payload" ]; then
+    payload="--data @$payload"
+    method="$3"
+    if [ -n "$method" ]; then
+      method="-X $method"
+    fi
   fi
   curl -L -s -S \
     $method \
     -H "Authorization: token $GITHUB_TOKEN" \
     --header "Content-Type: application/json" \
     -H 'Accept: application/vnd.github.comfort-fade-preview+json' \
-    --data "@$payload" \
+    $payload \
     "$comments_url"
 }
 
@@ -59,7 +62,12 @@ if echo "$body" | grep -q "setup"; then
   echo "$RESPONSE"
   exit 0
 fi
-trigger=$(echo "$body" | perl -e '$/=undef; $_=<>; print 1 if /\@check-spelling-bot(?:\s+|:\s*)update whitelist/')
+trigger=$(echo "$body" | perl -ne 'print if /\@check-spelling-bot(?:\s+|:\s*)update whitelist/')
 if [ -n "$trigger" ]; then
+  comments_url=$(cat "$GITHUB_EVENT_PATH" | jq -r .repository.comments_url)
+  export comments_url=$(echo "$comments_url" | perl -pne 's{\{.*\}}{/\\d+}')
+  comment_url=$(echo "$trigger" | perl -ne 'next unless m{($ENV{comments_url})}; print "$1\n";')
+  comment=$(comment "$comment_url")
+  echo "$comment" | jq -r .body
   echo "trigger? $trigger"
 fi
