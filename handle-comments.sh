@@ -77,6 +77,11 @@ if [ -n "$trigger" ]; then
   export comments_url=$(echo "$comments_url" | perl -pne 's{\{.*\}}{/\\d+}')
   comment_url=$(echo "$trigger" | perl -ne 'next unless m{($ENV{comments_url})}; print "$1\n";')
   comment=$(comment "$comment_url")
-  echo "$comment" | jq -r .body
-  echo "trigger? $trigger"
+  comment=$("$comment" | jq -r .body)
+  script=$(mktemp)
+  echo "$comment" | perl -e '$/=undef; $_=<>; s/.*\`\`\`(.*)\`\`\`.*/$1/s;print' >> $script
+  echo "# The following code (or equivalent) needs to be run:"
+  cat $script
+  echo "# end"
+  exit 0
 fi
